@@ -10,13 +10,20 @@ import bgSummer from '../assets/summer-bg.jpg';
 import bgRain from '../assets/rainy-bg.jpg';
 import bgWinter from '../assets/winter-bg.jpg';
 
-export function createWeatherSoundPlayer() {
-    let audio = null;
-    let currentSound = null;
-    let volume = 0.5;
-    let container = null;
+export function createWeatherSoundPlayer(): {init: () => void} {
+    let audio: HTMLAudioElement | null = null;
+    let currentSound: string | null = null;
+    let volume: number = 0.5;
+    let container: HTMLElement | null = null;
 
-    const configs = [
+    interface WeatherPreset {
+        label: string;
+        icon: string;
+        sound: string;
+        bg: string;
+    }
+
+    const configs: WeatherPreset[] = [
         {
             label: 'Summer',
             icon: iconSun,
@@ -37,15 +44,15 @@ export function createWeatherSoundPlayer() {
         },
     ];
 
-    function init() {
+    function init(): void {
         container = document.getElementById('buttons-container');
         if (!container) return;
         changeBackground(configs[0].bg);
-        createButtons();
+        createButtons(container);
         initVolumeControl();
     }
 
-    function createButtons() {
+    function createButtons(parent: HTMLElement): void {
         configs.forEach((cfg) => {
             const btn = document.createElement('button');
             btn.classList.add('button');
@@ -56,14 +63,14 @@ export function createWeatherSoundPlayer() {
             img.alt = cfg.label;
 
             btn.appendChild(img);
-            container.appendChild(btn);
+            parent.appendChild(btn);
 
             btn.addEventListener('click', () => toggleSound(cfg, btn));
         });
     }
 
     function initVolumeControl() {
-        const volumeSlider = document.getElementById('volume-slider');
+        const volumeSlider = document.getElementById('volume-slider') as HTMLInputElement;
 
         const updateTrackStyle = () => {
             const val = parseFloat(volumeSlider.value);
@@ -73,8 +80,10 @@ export function createWeatherSoundPlayer() {
             volumeSlider.style.setProperty('--progress', `${percent}%`);
         };
 
-        volumeSlider.addEventListener('input', (e) => {
-            volume = parseFloat(e.target.value);
+        volumeSlider.addEventListener('input', (e: Event): void => {
+            const target = e.target as HTMLInputElement
+            if (!target) return;
+            volume = parseFloat(target.value);
             if (audio) {
                 audio.volume = volume;
             }
@@ -84,7 +93,7 @@ export function createWeatherSoundPlayer() {
         updateTrackStyle();
     }
 
-    function toggleSound(cfg, btn) {
+    function toggleSound(cfg: WeatherPreset, btn: HTMLButtonElement): void {
         if (currentSound === cfg.sound) {
             if (audio && audio.paused) {
                 audio.play();
@@ -99,7 +108,7 @@ export function createWeatherSoundPlayer() {
         }
     }
 
-    function playSound(soundFile, btn) {
+    function playSound(soundFile: string, btn: HTMLButtonElement): void {
         if (audio) {
             audio.pause();
         }
@@ -112,12 +121,12 @@ export function createWeatherSoundPlayer() {
         updateActiveButton(btn);
     }
 
-    function changeBackground(bgFile) {
+    function changeBackground(bgFile: string): void {
         document.body.style.backgroundImage = `url(${bgFile})`;
     }
 
-    function updateActiveButton(activeBtn) {
-        const allBtns = container.querySelectorAll('.button');
+    function updateActiveButton(activeBtn: HTMLButtonElement): void {
+        const allBtns = container!.querySelectorAll('.button');
         allBtns.forEach((btn) => btn.classList.remove('active'));
         activeBtn.classList.add('active');
     }
